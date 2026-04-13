@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 public class Main {
@@ -68,25 +69,29 @@ public class Main {
     }
 
     private static void printData(File file, Map<String, BigDecimal> bankData) {
-        // header
-        System.out.printf("title %s %s ", IN_KEY, OUT_KEY);
         final var groups = GROUPS.keySet();
-        groups.forEach(category -> System.out.printf("%s ", category));
-        System.out.println();
+
+        // header
+        var header = new StringJoiner(",");
+        header.add("title");
+        header.add(IN_KEY);
+        header.add(OUT_KEY);
+        groups.forEach(header::add);
+        System.out.println(header);
 
         // values
-        System.out.printf("%s ", file.getName());
-        System.out.printf("%.2f ", bankData.getOrDefault(IN_KEY, BigDecimal.ZERO));
-        System.out.printf("%.2f ", bankData.getOrDefault(OUT_KEY, BigDecimal.ZERO));
-
+        var row = new StringJoiner(",");
+        row.add(file.getName());
+        row.add("%.2f".formatted(bankData.getOrDefault(IN_KEY, BigDecimal.ZERO)));
+        row.add("%.2f".formatted(bankData.getOrDefault(OUT_KEY, BigDecimal.ZERO)));
         groups.forEach(group -> {
             final var categories = GROUPS.get(group);
             final var amount = categories.stream()
                     .map(c -> bankData.getOrDefault(c, BigDecimal.ZERO))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            System.out.printf("%.2f ", amount);
+            row.add("%.2f".formatted(amount));
         });
-        System.out.println();
+        System.out.println(row);
     }
 
     /**
