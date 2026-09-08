@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bank-statement-extractor"
+version = "0.1.0"
+description = "Extract and categorize ING Bank DE statement transactions."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "pypdf>=5,<7",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8,<9",
+]
+
+[project.scripts]
+bank-statement-extractor = "bank_statement_extractor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
