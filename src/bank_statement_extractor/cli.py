@@ -110,9 +110,7 @@ def write_csv(
 
 
 def write_summary_rows(
-    summaries: tuple[tuple[str, dict[str, Decimal]], ...]
-    | list[tuple[str, dict[str, Decimal]]]
-    | tuple[tuple[str, dict[str, Decimal]], ...],
+    summaries: list[tuple[str, dict[str, Decimal]]] | tuple[tuple[str, dict[str, Decimal]], ...],
     output: TextIO,
     output_format: str = "csv",
 ) -> None:
@@ -141,15 +139,15 @@ def write_rows(
     writer = csv.writer(output, delimiter=_delimiter(output_format), lineterminator="\n")
     writer.writerow(("date", "name", "descr", "amount", "category"))
     for transaction in transactions:
-    writer.writerow(
-        (
-            transaction.date,
-            transaction.name,
-            transaction.descr,
-            _format_decimal(transaction.amount),
-            transaction.category or "",
+        writer.writerow(
+            (
+                transaction.date,
+                transaction.name,
+                transaction.descr,
+                _format_decimal(transaction.amount),
+                transaction.category or "",
+            )
         )
-    )
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -157,7 +155,7 @@ def main(argv: list[str] | None = None) -> None:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     rows_parser = subparsers.add_parser(
-    DEFAULT_COMMAND, help="Extract transactions as delimited rows."
+        DEFAULT_COMMAND, help="Extract transactions as delimited rows."
     )
     _add_shared_arguments(rows_parser)
 
@@ -167,61 +165,61 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(_normalize_argv(argv))
 
     if args.command == "sum":
-    summaries: list[tuple[str, dict[str, Decimal]]] = []
-    for pdf_path in args.pdfs:
-        text = extract_text(pdf_path)
-        amounts = convert_bank_statement(text)
-        summaries.append((pdf_path.name, amounts))
-    write_summary_rows(summaries, sys.stdout, args.format)
-    return
+        summaries: list[tuple[str, dict[str, Decimal]]] = []
+        for pdf_path in args.pdfs:
+            text = extract_text(pdf_path)
+            amounts = convert_bank_statement(text)
+            summaries.append((pdf_path.name, amounts))
+        write_summary_rows(summaries, sys.stdout, args.format)
+        return
 
     transactions: list[Transaction] = []
     for pdf_path in args.pdfs:
-    transactions.extend(parse_bank_statement(extract_text(pdf_path)))
+        transactions.extend(parse_bank_statement(extract_text(pdf_path)))
     write_rows(transactions, sys.stdout, args.format)
 
 
 def _add_shared_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-    "--format",
-    choices=("csv", "tsv"),
-    default="csv",
-    help="Output format. Defaults to csv.",
+        "--format",
+        choices=("csv", "tsv"),
+        default="csv",
+        help="Output format. Defaults to csv.",
     )
     parser.add_argument(
-    "pdfs",
-    nargs="*",
-    type=Path,
-    default=[DEFAULT_PDF_PATH],
-    help=f"Path to statement PDFs. Defaults to {DEFAULT_PDF_PATH}.",
+        "pdfs",
+        nargs="*",
+        type=Path,
+        default=[DEFAULT_PDF_PATH],
+        help=f"Path to statement PDFs. Defaults to {DEFAULT_PDF_PATH}.",
     )
 
 
 def _normalize_argv(argv: list[str] | None) -> list[str]:
     normalized = list(sys.argv[1:] if argv is None else argv)
     if not normalized or normalized[0] not in {DEFAULT_COMMAND, "sum"}:
-    return [DEFAULT_COMMAND, *normalized]
+        return [DEFAULT_COMMAND, *normalized]
     return normalized
 
 
 def _categorize_description(description: str) -> str | None:
     normalized_description = description.lower()
     for category in CATEGORIES:
-    if category in normalized_description:
-        return category
+        if category in normalized_description:
+            return category
     return None
 
 
 def _split_description(description: str) -> tuple[str, str]:
     parts = description.split(maxsplit=1)
     if len(parts) == 1:
-    return parts[0], ""
+        return parts[0], ""
     return parts[0], parts[1]
 
 
 def _delimiter(output_format: str) -> str:
     if output_format == "tsv":
-    return "\t"
+        return "\t"
     return ","
 
 
