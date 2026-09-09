@@ -117,6 +117,34 @@ def test_accepts_valid_german_date() -> None:
     assert_amount("2000.00", result["in"])
 
 
+def test_parses_transaction_rows() -> None:
+    transactions = cli.parse_bank_statement(
+        "\n".join(
+            (
+                "01.01.2024 Gehalt Arbeitgeber 1.500,00",
+                "05.01.2024 REWE Markt -49,99",
+            )
+        )
+    )
+
+    assert transactions == [
+        cli.Transaction(
+            date="01.01.2024",
+            name="Gehalt",
+            descr="Arbeitgeber",
+            amount=Decimal("1500.00"),
+            category=None,
+        ),
+        cli.Transaction(
+            date="05.01.2024",
+            name="REWE",
+            descr="Markt",
+            amount=Decimal("-49.99"),
+            category="rewe",
+        ),
+    ]
+
+
 def test_writes_csv_with_group_totals() -> None:
     result = cli.convert_bank_statement(
         "\n".join(
@@ -140,16 +168,75 @@ def test_writes_csv_with_group_totals() -> None:
     )
 
 
-def test_main_extracts_pdf_and_writes_csv(
+def test_writes_tsv_rows() -> None:
+    output = StringIO()
+
+    cli.write_rows(
+        [
+            cli.Transaction(
+                date="05.01.2024",
+                name="REWE",
+                descr="Markt",
+                amount=Decimal("-49.99"),
+                category="rewe",
+            )
+        ],
+        output,
+        "tsv",
+    )
+
+    assert output.getvalue() == (
+        "date\tname\tdescr\tamount\tcategory\n"
+        "05.01.2024\tREWE\tMarkt\t-49.99\trewe\n"
+    )
+
+
+def test_main_extracts_pdf_and_writes_rows(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr(cli, "extract_text", lambda path: "01.01.2024 Gehalt 1.500,00")
+    monkeypatch.setattr(
+        cli,
+        "extract_text",
+        lambda path: "\n".join(
+            (
+                "01.01.2024 Gehalt Arbeitgeber 1.500,00",
+                "05.01.2024 REWE Markt -49,99",
+            )
+        ),
+    )
 
     cli.main(["/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
+        "date,name,descr,amount,category\n"
+        "01.01.2024,Gehalt,Arbeitgeber,1500.00,\n"
+        "05.01.2024,REWE,Markt,-49.99,rewe\n"
+    )
+
+
+def test_main_sum_subcommand_writes_summary(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cli, "extract_text", lambda path: "01.01.2024 Gehalt 1.500,00")
+
+    cli.main(["sum", "/tmp/statement.pdf"])
+
+    assert capsys.readouterr().out == (
         "title,in,out,Grocery,Shopping,Fuel,Order\n"
         "statement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00\n"
+    )
+
+
+def test_main_supports_tsv_output(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cli, "extract_text", lambda path: "05.01.2024 REWE Markt -49,99")
+
+    cli.main(["--format", "tsv", "/tmp/statement.pdf"])
+
+    assert capsys.readouterr().out == (
+        "date\tname\tdescr\tamount\tcategory\n"
+        "05.01.2024\tREWE\tMarkt\t-49.99\trewe\n"
     )
 
 
