@@ -84,6 +84,10 @@ def test_categorizes_grocery_transaction() -> None:
         ("ARAL", "aral"),
         ("Sparen Tagesgeld", "sparen"),
         ("Versicherungsbeitrag", "versicherung"),
+        ("Lebensversicherung", "versicherung"),
+        ("Andere Vers.", "versicherung"),
+        ("Vers.", "versicherung"),
+        ("Krankenversicherungen", "versicherung"),
     ),
 )
 def test_categorizes_recovered_terms(description: str, category: str) -> None:

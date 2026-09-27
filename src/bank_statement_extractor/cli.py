@@ -56,7 +56,7 @@ CATEGORY_PATTERNS = OrderedDict(
         ("tank", compile_pattern(r"\btank\w*")),
         ("dauerauftrag", compile_pattern(r"\bdauerauftrag\b")),
         ("sparen", compile_pattern(r"\bsparen\b")),
-        ("versicherung", compile_pattern(r"\bversicherung\w*")),
+        ("versicherung", compile_pattern(r"\b\w*(vers)(icherung)?\w*")),
     )
 )
 
