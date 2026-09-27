@@ -30,13 +30,7 @@ def test_parses_negative_amount() -> None:
 
 
 def test_accumulates_multiple_transactions() -> None:
-    text = "\n".join(
-        (
-            "01.01.2024 Gehalt 1.000,00",
-            "05.01.2024 REWE Markt -49,99",
-            "10.01.2024 LIDL -12,49",
-        )
-    )
+    text = "01.01.2024 Gehalt 1.000,00\n05.01.2024 REWE Markt -49,99\n10.01.2024 LIDL -12,49"
 
     result = cli.convert_bank_statement(text)
 
@@ -118,14 +112,7 @@ def test_accepts_valid_german_date() -> None:
 
 
 def test_parses_transaction_rows() -> None:
-    transactions = cli.parse_bank_statement(
-        "\n".join(
-            (
-                "01.01.2024 Gehalt Arbeitgeber 1.500,00",
-                "05.01.2024 REWE Markt -49,99",
-            )
-        )
-    )
+    transactions = cli.parse_bank_statement("01.01.2024 Gehalt Arbeitgeber 1.500,00\n05.01.2024 REWE Markt -49,99")
 
     assert transactions == [
         cli.Transaction(
@@ -147,24 +134,19 @@ def test_parses_transaction_rows() -> None:
 
 def test_writes_csv_with_group_totals() -> None:
     result = cli.convert_bank_statement(
-        "\n".join(
-            (
-                "01.01.2024 Gehalt 1.500,00",
-                "05.01.2024 REWE Markt -49,99",
-                "10.01.2024 LIDL -12,49",
-                "12.01.2024 Amazon Marketplace -20,00",
-                "14.01.2024 Aral Tankstelle -60,00",
-                "15.01.2024 Dauerauftrag Miete -700,00",
-            )
-        )
+        "01.01.2024 Gehalt 1.500,00\n"
+        "05.01.2024 REWE Markt -49,99\n"
+        "10.01.2024 LIDL -12,49\n"
+        "12.01.2024 Amazon Marketplace -20,00\n"
+        "14.01.2024 Aral Tankstelle -60,00\n"
+        "15.01.2024 Dauerauftrag Miete -700,00"
     )
     output = StringIO()
 
     cli.write_csv("bank.pdf", result, output)
 
     assert output.getvalue() == (
-        "title,in,out,Grocery,Shopping,Fuel,Order\n"
-        "bank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00\n"
+        "title,in,out,Grocery,Shopping,Fuel,Order\nbank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00\n"
     )
 
 
@@ -185,32 +167,20 @@ def test_writes_tsv_rows() -> None:
         "tsv",
     )
 
-    assert output.getvalue() == (
-        "date\tname\tdescr\tamount\tcategory\n"
-        "05.01.2024\tREWE\tMarkt\t-49.99\trewe\n"
-    )
+    assert output.getvalue() == ("date\tname\tdescr\tamount\tcategory\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\n")
 
 
-def test_main_extracts_pdf_and_writes_rows(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_main_extracts_pdf_and_writes_rows(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     monkeypatch.setattr(
         cli,
         "extract_text",
-        lambda path: "\n".join(
-            (
-                "01.01.2024 Gehalt Arbeitgeber 1.500,00",
-                "05.01.2024 REWE Markt -49,99",
-            )
-        ),
+        lambda path: "01.01.2024 Gehalt Arbeitgeber 1.500,00\n05.01.2024 REWE Markt -49,99",
     )
 
     cli.main(["/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "date,name,descr,amount,category\n"
-        "01.01.2024,Gehalt,Arbeitgeber,1500.00,\n"
-        "05.01.2024,REWE,Markt,-49.99,rewe\n"
+        "date,name,descr,amount,category\n01.01.2024,Gehalt,Arbeitgeber,1500.00,\n05.01.2024,REWE,Markt,-49.99,rewe\n"
     )
 
 
@@ -222,22 +192,16 @@ def test_main_sum_subcommand_writes_summary(
     cli.main(["sum", "/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "title,in,out,Grocery,Shopping,Fuel,Order\n"
-        "statement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00\n"
+        "title,in,out,Grocery,Shopping,Fuel,Order\nstatement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00\n"
     )
 
 
-def test_main_supports_tsv_output(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_main_supports_tsv_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     monkeypatch.setattr(cli, "extract_text", lambda path: "05.01.2024 REWE Markt -49,99")
 
     cli.main(["--format", "tsv", "/tmp/statement.pdf"])
 
-    assert capsys.readouterr().out == (
-        "date\tname\tdescr\tamount\tcategory\n"
-        "05.01.2024\tREWE\tMarkt\t-49.99\trewe\n"
-    )
+    assert capsys.readouterr().out == ("date\tname\tdescr\tamount\tcategory\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\n")
 
 
 def test_extracts_text_from_pdf(tmp_path: Path) -> None:

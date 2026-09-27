@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import argparse
 import csv
 import sys
@@ -12,12 +10,10 @@ from typing import TextIO
 
 from pypdf import PdfReader
 
-TRANSACTION_PATTERN = compile_pattern(
-    r"^([0-3][0-9]\.[0-1][0-9]\.[0-9]{4}) (.+) (-?[0-9.]*[0-9]+,[0-9]+)$"
-)
+TRANSACTION_PATTERN = compile_pattern(r"^([0-3][0-9]\.[0-1][0-9]\.[0-9]{4}) (.+) (-?[0-9.]*[0-9]+,[0-9]+)$")
 
 CATEGORIES = OrderedDict(
-    (category, Decimal("0"))
+    (category, Decimal(0))
     for category in (
         "amazon",
         "paypal",
@@ -87,9 +83,9 @@ def parse_bank_statement(text: str) -> list[Transaction]:
 
 
 def convert_bank_statement(text: str) -> dict[str, Decimal]:
-    amounts = OrderedDict((category, Decimal("0")) for category in CATEGORIES)
-    amounts[OUT_KEY] = Decimal("0")
-    amounts[IN_KEY] = Decimal("0")
+    amounts = OrderedDict((category, Decimal(0)) for category in CATEGORIES)
+    amounts[OUT_KEY] = Decimal(0)
+    amounts[IN_KEY] = Decimal(0)
 
     for transaction in parse_bank_statement(text):
         if transaction.amount >= 0:
@@ -103,9 +99,7 @@ def convert_bank_statement(text: str) -> dict[str, Decimal]:
     return amounts
 
 
-def write_csv(
-    file_name: str, amounts: dict[str, Decimal], output: TextIO, output_format: str = "csv"
-) -> None:
+def write_csv(file_name: str, amounts: dict[str, Decimal], output: TextIO, output_format: str = "csv") -> None:
     write_summary_rows(((file_name, amounts),), output, output_format)
 
 
@@ -118,24 +112,20 @@ def write_summary_rows(
     writer.writerow(("title", IN_KEY, OUT_KEY, *GROUPS.keys()))
     for file_name, amounts in summaries:
         group_totals = (
-            _format_decimal(
-                sum((amounts.get(category, Decimal("0")) for category in categories), Decimal("0"))
-            )
+            _format_decimal(sum((amounts.get(category, Decimal(0)) for category in categories), Decimal(0)))
             for categories in GROUPS.values()
         )
         writer.writerow(
             (
                 file_name,
-                _format_decimal(amounts.get(IN_KEY, Decimal("0"))),
-                _format_decimal(amounts.get(OUT_KEY, Decimal("0"))),
+                _format_decimal(amounts.get(IN_KEY, Decimal(0))),
+                _format_decimal(amounts.get(OUT_KEY, Decimal(0))),
                 *group_totals,
             )
         )
 
 
-def write_rows(
-    transactions: list[Transaction], output: TextIO, output_format: str = "csv"
-) -> None:
+def write_rows(transactions: list[Transaction], output: TextIO, output_format: str = "csv") -> None:
     writer = csv.writer(output, delimiter=_delimiter(output_format), lineterminator="\n")
     writer.writerow(("date", "name", "descr", "amount", "category"))
     for transaction in transactions:
@@ -154,9 +144,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Extract data from an ING bank statement PDF.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    rows_parser = subparsers.add_parser(
-        DEFAULT_COMMAND, help="Extract transactions as delimited rows."
-    )
+    rows_parser = subparsers.add_parser(DEFAULT_COMMAND, help="Extract transactions as delimited rows.")
     _add_shared_arguments(rows_parser)
 
     sum_parser = subparsers.add_parser("sum", help="Summarize categorized statement totals.")
