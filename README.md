@@ -3,16 +3,12 @@ Tool to extract and categorize data from bank statements, specialized to ING Ban
 
 ## Installation
 
-Install from a local checkout:
+This project uses the [`uv` package manager](https://docs.astral.sh/uv/). Follow the
+[official installation guide](https://docs.astral.sh/uv/getting-started/installation/),
+then install the command from a local checkout:
 
 ```bash
-python -m pip install .
-```
-
-For development, install it in editable mode:
-
-```bash
-python -m pip install -e .
+uv tool install .
 ```
 
 This installs the `bank-statement-extractor` command.
@@ -57,18 +53,18 @@ bank-statement-extractor --format tsv /path/to/bank.pdf
 bank-statement-extractor sum --format tsv /path/to/bank.pdf
 ```
 
-If the command is not on your `PATH` after a user install, run it from Python's user script
-directory:
-
-```bash
-~/.local/bin/bank-statement-extractor /path/to/bank.pdf
-```
-
 ## Development
 
-Install test dependencies and run the test suite:
+The project dependencies are declared in `pyproject.toml` and locked in `uv.lock`.
+Create the development environment:
 
 ```bash
-python -m pip install -e '.[test]'
-python -m pytest
+uv sync
+```
+
+Run formatting, type checks, linting, and tests:
+
+```bash
+make format
+make check
 ```
