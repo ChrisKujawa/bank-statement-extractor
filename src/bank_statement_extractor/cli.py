@@ -12,29 +12,55 @@ from pypdf import PdfReader
 
 TRANSACTION_PATTERN = compile_pattern(r"^([0-3][0-9]\.[0-1][0-9]\.[0-9]{4}) (.+) (-?[0-9.]*[0-9]+,[0-9]+)$")
 
-CATEGORIES = OrderedDict(
-    (category, Decimal(0))
-    for category in (
-        "amazon",
-        "paypal",
-        "tank",
-        "rewe",
-        "kaufland",
-        "edeka",
-        "lidl",
-        "star",
-        "dauerauftrag",
+GROUPS = OrderedDict(
+    (
+        (
+            "Grocery",
+            (
+                "rewe",
+                "lidl",
+                "edeka",
+                "kaufland",
+                "e-center",
+                "dm",
+                "rossmann",
+                "aldi",
+                "norma",
+                "netto",
+            ),
+        ),
+        ("Shopping", ("amazon", "paypal")),
+        ("Fuel", ("tank", "star", "hem", "aral")),
+        ("Order", ("dauerauftrag", "sparen")),
+        ("Insurance", ("versicherung",)),
     )
 )
 
-GROUPS = OrderedDict(
+CATEGORY_PATTERNS = OrderedDict(
     (
-        ("Grocery", ("rewe", "lidl", "edeka", "kaufland")),
-        ("Shopping", ("amazon", "paypal")),
-        ("Fuel", ("tank", "star")),
-        ("Order", ("dauerauftrag",)),
+        ("rewe", compile_pattern(r"\brewe\b")),
+        ("lidl", compile_pattern(r"\blidl\b")),
+        ("edeka", compile_pattern(r"\bedeka\b")),
+        ("kaufland", compile_pattern(r"\bkaufland\b")),
+        ("e-center", compile_pattern(r"\be-center\b")),
+        ("dm", compile_pattern(r"\bdm\b")),
+        ("rossmann", compile_pattern(r"\brossmann\b")),
+        ("aldi", compile_pattern(r"\baldi\b")),
+        ("norma", compile_pattern(r"\bnorma\b")),
+        ("netto", compile_pattern(r"\bnetto\b")),
+        ("amazon", compile_pattern(r"\b(?:amazon|amzn)\b")),
+        ("paypal", compile_pattern(r"\bpaypal\b")),
+        ("star", compile_pattern(r"\bstar\b")),
+        ("hem", compile_pattern(r"\bhem\b")),
+        ("aral", compile_pattern(r"\baral\b")),
+        ("tank", compile_pattern(r"\btank\w*")),
+        ("dauerauftrag", compile_pattern(r"\bdauerauftrag\b")),
+        ("sparen", compile_pattern(r"\bsparen\b")),
+        ("versicherung", compile_pattern(r"\bversicherung\w*")),
     )
 )
+
+CATEGORIES = OrderedDict((category, Decimal(0)) for category in CATEGORY_PATTERNS)
 
 OUT_KEY = "out"
 IN_KEY = "in"
@@ -192,8 +218,8 @@ def _normalize_argv(argv: list[str] | None) -> list[str]:
 
 def _categorize_description(description: str) -> str | None:
     normalized_description = description.lower()
-    for category in CATEGORIES:
-        if category in normalized_description:
+    for category, pattern in CATEGORY_PATTERNS.items():
+        if pattern.search(normalized_description):
             return category
     return None
 

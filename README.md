@@ -42,8 +42,8 @@ bank-statement-extractor sum /path/to/bank.pdf
 ```
 
 ```csv
-title,in,out,Grocery,Shopping,Fuel,Order
-bank.pdf,1500.00,-62.48,-62.48,0.00,0.00,0.00
+title,in,out,Grocery,Shopping,Fuel,Order,Insurance
+bank.pdf,1500.00,-62.48,-62.48,0.00,0.00,0.00,0.00
 ```
 
 Both modes support CSV and TSV output:
