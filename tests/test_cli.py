@@ -70,6 +70,28 @@ def test_categorizes_grocery_transaction() -> None:
     assert_amount("-49.99", result["rewe"])
 
 
+@pytest.mark.parametrize(
+    ("description", "category"),
+    (
+        ("E-CENTER Einkauf", "e-center"),
+        ("dm Drogeriemarkt", "dm"),
+        ("Rossmann Filiale", "rossmann"),
+        ("ALDI SUED", "aldi"),
+        ("NORMA SAGT DANKE", "norma"),
+        ("Netto Marken-Discount", "netto"),
+        ("AMZN Marketplace", "amazon"),
+        ("HEM Tankstelle", "hem"),
+        ("ARAL", "aral"),
+        ("Sparen Tagesgeld", "sparen"),
+        ("Versicherungsbeitrag", "versicherung"),
+    ),
+)
+def test_categorizes_recovered_terms(description: str, category: str) -> None:
+    transactions = cli.parse_bank_statement(f"05.01.2024 {description} -10,00")
+
+    assert transactions[0].category == category
+
+
 def test_does_not_false_positive_on_star() -> None:
     line = "05.01.2024 Sparkasse Duisburg -100,00"
 
@@ -78,12 +100,20 @@ def test_does_not_false_positive_on_star() -> None:
     assert_amount("0.00", result["star"])
 
 
-def test_does_not_false_positive_on_tank() -> None:
+def test_categorizes_specific_fuel_merchant_before_generic_term() -> None:
     line = "05.01.2024 Aral Tankstelle -60,00"
 
     result = cli.convert_bank_statement(line)
 
-    assert_amount("-60.00", result["tank"])
+    assert_amount("-60.00", result["aral"])
+    assert_amount("0.00", result["tank"])
+
+
+@pytest.mark.parametrize("description", ("Geldmarkt", "Themenladen", "Startguthaben"))
+def test_short_category_terms_only_match_whole_words(description: str) -> None:
+    transactions = cli.parse_bank_statement(f"05.01.2024 {description} -10,00")
+
+    assert transactions[0].category is None
 
 
 def test_column_order_is_consistent_across_runs() -> None:
@@ -91,7 +121,13 @@ def test_column_order_is_consistent_across_runs() -> None:
     keys2 = list(cli.GROUPS)
 
     assert keys1 == keys2
-    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order"]
+    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order", "Insurance"]
+
+
+def test_all_group_categories_have_matchers() -> None:
+    grouped_categories = {category for categories in cli.GROUPS.values() for category in categories}
+
+    assert grouped_categories == set(cli.CATEGORY_PATTERNS)
 
 
 def test_rejects_malformed_date_in_line() -> None:
@@ -146,7 +182,8 @@ def test_writes_csv_with_group_totals() -> None:
     cli.write_csv("bank.pdf", result, output)
 
     assert output.getvalue() == (
-        "title,in,out,Grocery,Shopping,Fuel,Order\nbank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00\n"
+        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance\n"
+        "bank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00,0.00\n"
     )
 
 
@@ -192,7 +229,7 @@ def test_main_sum_subcommand_writes_summary(
     cli.main(["sum", "/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "title,in,out,Grocery,Shopping,Fuel,Order\nstatement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00\n"
+        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance\nstatement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00,0.00\n"
     )
 
 
