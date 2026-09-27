@@ -76,6 +76,7 @@ class Transaction:
     descr: str
     amount: Decimal
     category: str | None
+    group: str | None
 
 
 def extract_text(pdf_path: Path) -> str:
@@ -95,6 +96,7 @@ def parse_bank_statement(text: str) -> list[Transaction]:
         description = match.group(2)
         name, descr = _split_description(description)
         category = _categorize_description(description)
+        group = _find_group(category)
         transactions.append(
             Transaction(
                 date=match.group(1),
@@ -102,6 +104,7 @@ def parse_bank_statement(text: str) -> list[Transaction]:
                 descr=descr,
                 amount=_parse_german_decimal(match.group(3)),
                 category=category,
+                group=group,
             )
         )
 
@@ -153,7 +156,7 @@ def write_summary_rows(
 
 def write_rows(transactions: list[Transaction], output: TextIO, output_format: str = "csv") -> None:
     writer = csv.writer(output, delimiter=_delimiter(output_format), lineterminator="\n")
-    writer.writerow(("date", "name", "descr", "amount", "category"))
+    writer.writerow(("date", "name", "descr", "amount", "category", "group"))
     for transaction in transactions:
         writer.writerow(
             (
@@ -162,6 +165,7 @@ def write_rows(transactions: list[Transaction], output: TextIO, output_format: s
                 transaction.descr,
                 _format_decimal(transaction.amount),
                 transaction.category or "",
+                transaction.group or "",
             )
         )
 
@@ -221,6 +225,14 @@ def _categorize_description(description: str) -> str | None:
     for category, pattern in CATEGORY_PATTERNS.items():
         if pattern.search(normalized_description):
             return category
+    return None
+
+
+def _find_group(category: str) -> str | None:
+    for group, list in GROUPS.items():
+        for group_category in list:
+            if group_category == category:
+                return group
     return None
 
 

@@ -156,18 +156,10 @@ def test_parses_transaction_rows() -> None:
 
     assert transactions == [
         cli.Transaction(
-            date="01.01.2024",
-            name="Gehalt",
-            descr="Arbeitgeber",
-            amount=Decimal("1500.00"),
-            category=None,
+            date="01.01.2024", name="Gehalt", descr="Arbeitgeber", amount=Decimal("1500.00"), category=None, group=None
         ),
         cli.Transaction(
-            date="05.01.2024",
-            name="REWE",
-            descr="Markt",
-            amount=Decimal("-49.99"),
-            category="rewe",
+            date="05.01.2024", name="REWE", descr="Markt", amount=Decimal("-49.99"), category="rewe", group="Grocery"
         ),
     ]
 
@@ -202,13 +194,16 @@ def test_writes_tsv_rows() -> None:
                 descr="Markt",
                 amount=Decimal("-49.99"),
                 category="rewe",
+                group="Grocery",
             )
         ],
         output,
         "tsv",
     )
 
-    assert output.getvalue() == ("date\tname\tdescr\tamount\tcategory\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\n")
+    assert output.getvalue() == (
+        "date\tname\tdescr\tamount\tcategory\tgroup\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\tGrocery\n"
+    )
 
 
 def test_main_extracts_pdf_and_writes_rows(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
@@ -221,7 +216,7 @@ def test_main_extracts_pdf_and_writes_rows(monkeypatch: pytest.MonkeyPatch, caps
     cli.main(["/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "date,name,descr,amount,category\n01.01.2024,Gehalt,Arbeitgeber,1500.00,\n05.01.2024,REWE,Markt,-49.99,rewe\n"
+        "date,name,descr,amount,category,group\n01.01.2024,Gehalt,Arbeitgeber,1500.00,,\n05.01.2024,REWE,Markt,-49.99,rewe,Grocery\n"
     )
 
 
@@ -242,7 +237,9 @@ def test_main_supports_tsv_output(monkeypatch: pytest.MonkeyPatch, capsys: pytes
 
     cli.main(["--format", "tsv", "/tmp/statement.pdf"])
 
-    assert capsys.readouterr().out == ("date\tname\tdescr\tamount\tcategory\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\n")
+    assert capsys.readouterr().out == (
+        "date\tname\tdescr\tamount\tcategory\tgroup\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\tGrocery\n"
+    )
 
 
 def test_extracts_text_from_pdf(tmp_path: Path) -> None:
