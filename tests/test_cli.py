@@ -125,7 +125,7 @@ def test_column_order_is_consistent_across_runs() -> None:
     keys2 = list(cli.GROUPS)
 
     assert keys1 == keys2
-    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order", "Insurance"]
+    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order", "Insurance", "Income"]
 
 
 def test_all_group_categories_have_matchers() -> None:
@@ -156,7 +156,12 @@ def test_parses_transaction_rows() -> None:
 
     assert transactions == [
         cli.Transaction(
-            date="01.01.2024", name="Gehalt", descr="Arbeitgeber", amount=Decimal("1500.00"), category=None, group=None
+            date="01.01.2024",
+            name="Gehalt",
+            descr="Arbeitgeber",
+            amount=Decimal("1500.00"),
+            category="gehalt",
+            group="Income",
         ),
         cli.Transaction(
             date="05.01.2024", name="REWE", descr="Markt", amount=Decimal("-49.99"), category="rewe", group="Grocery"
@@ -178,8 +183,8 @@ def test_writes_csv_with_group_totals() -> None:
     cli.write_csv("bank.pdf", result, output)
 
     assert output.getvalue() == (
-        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance\n"
-        "bank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00,0.00\n"
+        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance,Income\n"
+        "bank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00,0.00,1500.00\n"
     )
 
 
@@ -216,7 +221,7 @@ def test_main_extracts_pdf_and_writes_rows(monkeypatch: pytest.MonkeyPatch, caps
     cli.main(["/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "date,name,descr,amount,category,group\n01.01.2024,Gehalt,Arbeitgeber,1500.00,,\n05.01.2024,REWE,Markt,-49.99,rewe,Grocery\n"
+        "date,name,descr,amount,category,group\n01.01.2024,Gehalt,Arbeitgeber,1500.00,gehalt,Income\n05.01.2024,REWE,Markt,-49.99,rewe,Grocery\n"
     )
 
 
@@ -228,7 +233,7 @@ def test_main_sum_subcommand_writes_summary(
     cli.main(["sum", "/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance\nstatement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00,0.00\n"
+        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance,Income\nstatement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00,0.00,1500.00\n"
     )
 
 
