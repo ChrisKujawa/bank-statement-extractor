@@ -29,6 +29,31 @@ def assert_amount(expected: str, actual: Decimal) -> None:
         ("Andere Vers.", "versicherung"),
         ("Vers.", "versicherung"),
         ("Krankenversicherungen", "versicherung"),
+        ("VISA Muster Backstube", "baecker"),
+        ("Stadtbackerei Nord", "baecker"),
+        ("Boulangerie Exemple", "baecker"),
+        ("VISA Decathlon Filiale", "decathlon"),
+        ("VISA Levis Shop Online", "levis"),
+        ("VISA Smyths Spielwaren", "smyths"),
+        ("VISA Marykay Kosmetik", "marykay"),
+        ("VISA Beispiel Baumarkt Hellweg", "baumarkt"),
+        ("VISA Agip Service Station", "agip"),
+        ("VISA Total Service Station", "total"),
+        ("Muster Bausparkasse AG", "bausparkasse"),
+        ("Familien kasse Auszahlung", "kindergeld"),
+        ("Telekom Rechnung", "telekom"),
+        ("Vodafone Vertrag", "telekom"),
+        ("Klarmobil Tarif", "telekom"),
+        ("Rundfunk Beitrag Service", "rundfunk"),
+        ("Stadtreinigung Gebuehr", "stadtreinigung"),
+        ("VISA Muster Apotheke", "apotheke"),
+        ("Dr. med. Mustermann", "arzt"),
+        ("Fitnessstudio Beispiel", "fitness"),
+        ("VISA Beispiel Restaurant", "restaurant"),
+        ("VISA Grillhaus Muster", "restaurant"),
+        ("KITA Gebuehr Beispiel", "kita"),
+        ("VISA Nahverkehr BVG", "bvg"),
+        ("Bargeldauszahlung Automat", "bargeld"),
     ),
 )
 def test_categorizes_recovered_terms(description: str, category: str) -> None:
@@ -49,7 +74,20 @@ def test_column_order_is_consistent_across_runs() -> None:
     keys2 = list(cli.GROUPS)
 
     assert keys1 == keys2
-    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order", "Insurance", "Income", "Consumption"]
+    assert keys1 == [
+        "Grocery",
+        "Shopping",
+        "Fuel",
+        "Order",
+        "Insurance",
+        "Income",
+        "Consumption",
+        "Health",
+        "Leisure",
+        "Family",
+        "Transport",
+        "Cash",
+    ]
 
 
 def test_all_group_categories_have_matchers() -> None:
