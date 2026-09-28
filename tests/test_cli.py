@@ -169,25 +169,6 @@ def test_parses_transaction_rows() -> None:
     ]
 
 
-def test_writes_csv_with_group_totals() -> None:
-    result = cli.convert_bank_statement(
-        "01.01.2024 Gehalt 1.500,00\n"
-        "05.01.2024 REWE Markt -49,99\n"
-        "10.01.2024 LIDL -12,49\n"
-        "12.01.2024 Amazon Marketplace -20,00\n"
-        "14.01.2024 Aral Tankstelle -60,00\n"
-        "15.01.2024 Dauerauftrag Miete -700,00"
-    )
-    output = StringIO()
-
-    cli.write_csv("bank.pdf", result, output)
-
-    assert output.getvalue() == (
-        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance,Income\n"
-        "bank.pdf,1500.00,-842.48,-62.48,-20.00,-60.00,-700.00,0.00,1500.00\n"
-    )
-
-
 def test_writes_tsv_rows() -> None:
     output = StringIO()
 
@@ -222,18 +203,6 @@ def test_main_extracts_pdf_and_writes_rows(monkeypatch: pytest.MonkeyPatch, caps
 
     assert capsys.readouterr().out == (
         "date,name,descr,amount,category,group\n01.01.2024,Gehalt,Arbeitgeber,1500.00,gehalt,Income\n05.01.2024,REWE,Markt,-49.99,rewe,Grocery\n"
-    )
-
-
-def test_main_sum_subcommand_writes_summary(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setattr(cli, "extract_text", lambda path: "01.01.2024 Gehalt 1.500,00")
-
-    cli.main(["sum", "/tmp/statement.pdf"])
-
-    assert capsys.readouterr().out == (
-        "title,in,out,Grocery,Shopping,Fuel,Order,Insurance,Income\nstatement.pdf,1500.00,0.00,0.00,0.00,0.00,0.00,0.00,1500.00\n"
     )
 
 

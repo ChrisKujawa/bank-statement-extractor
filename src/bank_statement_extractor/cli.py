@@ -69,7 +69,6 @@ OUT_KEY = "out"
 IN_KEY = "in"
 IGNORED_TERMS = ("saldo", "freistellungsauftrag", "sparer-pauschbetrag")
 DEFAULT_PDF_PATH = Path("/tmp/bank.pdf")
-DEFAULT_COMMAND = "rows"
 
 
 @dataclass(frozen=True)
@@ -131,32 +130,6 @@ def convert_bank_statement(text: str) -> dict[str, Decimal]:
     return amounts
 
 
-def write_csv(file_name: str, amounts: dict[str, Decimal], output: TextIO, output_format: str = "csv") -> None:
-    write_summary_rows(((file_name, amounts),), output, output_format)
-
-
-def write_summary_rows(
-    summaries: list[tuple[str, dict[str, Decimal]]] | tuple[tuple[str, dict[str, Decimal]], ...],
-    output: TextIO,
-    output_format: str = "csv",
-) -> None:
-    writer = csv.writer(output, delimiter=_delimiter(output_format), lineterminator="\n")
-    writer.writerow(("title", IN_KEY, OUT_KEY, *GROUPS.keys()))
-    for file_name, amounts in summaries:
-        group_totals = (
-            _format_decimal(sum((amounts.get(category, Decimal(0)) for category in categories), Decimal(0)))
-            for categories in GROUPS.values()
-        )
-        writer.writerow(
-            (
-                file_name,
-                _format_decimal(amounts.get(IN_KEY, Decimal(0))),
-                _format_decimal(amounts.get(OUT_KEY, Decimal(0))),
-                *group_totals,
-            )
-        )
-
-
 def write_rows(transactions: list[Transaction], output: TextIO, output_format: str = "csv") -> None:
     writer = csv.writer(output, delimiter=_delimiter(output_format), lineterminator="\n")
     writer.writerow(("date", "name", "descr", "amount", "category", "group"))
@@ -175,32 +148,6 @@ def write_rows(transactions: list[Transaction], output: TextIO, output_format: s
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Extract data from an ING bank statement PDF.")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    rows_parser = subparsers.add_parser(DEFAULT_COMMAND, help="Extract transactions as delimited rows.")
-    _add_shared_arguments(rows_parser)
-
-    sum_parser = subparsers.add_parser("sum", help="Summarize categorized statement totals.")
-    _add_shared_arguments(sum_parser)
-
-    args = parser.parse_args(_normalize_argv(argv))
-
-    if args.command == "sum":
-        summaries: list[tuple[str, dict[str, Decimal]]] = []
-        for pdf_path in args.pdfs:
-            text = extract_text(pdf_path)
-            amounts = convert_bank_statement(text)
-            summaries.append((pdf_path.name, amounts))
-        write_summary_rows(summaries, sys.stdout, args.format)
-        return
-
-    transactions: list[Transaction] = []
-    for pdf_path in args.pdfs:
-        transactions.extend(parse_bank_statement(extract_text(pdf_path)))
-    write_rows(transactions, sys.stdout, args.format)
-
-
-def _add_shared_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--format",
         choices=("csv", "tsv"),
@@ -214,13 +161,12 @@ def _add_shared_arguments(parser: argparse.ArgumentParser) -> None:
         default=[DEFAULT_PDF_PATH],
         help=f"Path to statement PDFs. Defaults to {DEFAULT_PDF_PATH}.",
     )
+    args = parser.parse_args(argv)
 
-
-def _normalize_argv(argv: list[str] | None) -> list[str]:
-    normalized = list(sys.argv[1:] if argv is None else argv)
-    if not normalized or normalized[0] not in {DEFAULT_COMMAND, "sum"}:
-        return [DEFAULT_COMMAND, *normalized]
-    return normalized
+    transactions: list[Transaction] = []
+    for pdf_path in args.pdfs:
+        transactions.extend(parse_bank_statement(extract_text(pdf_path)))
+    write_rows(transactions, sys.stdout, args.format)
 
 
 def _categorize_description(description: str) -> str | None:
