@@ -78,13 +78,13 @@ def test_parses_transaction_rows() -> None:
 
 def test_parses_transaction_rows_with_whitespaces() -> None:
     transactions = cli.parse_bank_statement(
-        "01.01.2024 Lastschrift Amazon\t more text\t  than usual here 1.500,00\n05.01.2024 REWE Markt -49,99"
+        "01.01.2024 Lastschrift Amazon\t more, text\t  than usual here 1.500,00\n05.01.2024 REWE Markt -49,99"
     )
 
     assert transactions[0] == cli.Transaction(
         date="01.01.2024",
         name="Lastschrift",
-        descr="Amazon more text than usual here",
+        descr="Amazon more, text than usual here",
         amount=Decimal("1500.00"),
         category="amazon",
         group="Shopping",
