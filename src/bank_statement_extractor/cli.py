@@ -117,23 +117,6 @@ def parse_bank_statement(text: str) -> list[Transaction]:
     return transactions
 
 
-def convert_bank_statement(text: str) -> dict[str, Decimal]:
-    amounts = OrderedDict((category, Decimal(0)) for category in CATEGORIES)
-    amounts[OUT_KEY] = Decimal(0)
-    amounts[IN_KEY] = Decimal(0)
-
-    for transaction in parse_bank_statement(text):
-        if transaction.amount >= 0:
-            amounts[IN_KEY] += transaction.amount
-        else:
-            amounts[OUT_KEY] += transaction.amount
-
-        if transaction.category is not None:
-            amounts[transaction.category] += transaction.amount
-
-    return amounts
-
-
 def write_rows(transactions: list[Transaction], output: TextIO, output_format: str = "csv") -> None:
     writer = csv.writer(output, delimiter=_delimiter(output_format), lineterminator="\n")
     writer.writerow(("date", "name", "descr", "amount", "category", "group"))
