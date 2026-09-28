@@ -94,6 +94,7 @@ def parse_bank_statement(text: str) -> list[Transaction]:
     transactions: list[Transaction] = []
 
     for line in text.splitlines():
+        line = line.strip()
         match = TRANSACTION_PATTERN.match(line)
         normalized_line = line.lower()
         if match is None or any(term in normalized_line for term in IGNORED_TERMS):
@@ -176,7 +177,7 @@ def _split_description(description: str) -> tuple[str, str]:
     parts = description.split(maxsplit=1)
     if len(parts) == 1:
         return parts[0], ""
-    return parts[0], parts[1]
+    return parts[0], " ".join(parts[1].split())
 
 
 def _delimiter(output_format: str) -> str:

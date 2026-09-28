@@ -76,6 +76,45 @@ def test_parses_transaction_rows() -> None:
     ]
 
 
+def test_parses_transaction_rows_with_whitespaces() -> None:
+    transactions = cli.parse_bank_statement(
+        "01.01.2024 Lastschrift Amazon\t more text\t  than usual here 1.500,00\n05.01.2024 REWE Markt -49,99"
+    )
+
+    assert transactions[0] == cli.Transaction(
+        date="01.01.2024",
+        name="Lastschrift",
+        descr="Amazon more text than usual here",
+        amount=Decimal("1500.00"),
+        category="amazon",
+        group="Shopping",
+    )
+
+    assert transactions[1] == cli.Transaction(
+        date="05.01.2024", name="REWE", descr="Markt", amount=Decimal("-49.99"), category="rewe", group="Grocery"
+    )
+
+
+def test_should_skip_non_bank_statement() -> None:
+    transactions = cli.parse_bank_statement("Hallo world ; Foo Bar \n 05.01.2024 REWE Markt -49,99")
+
+    assert transactions == [
+        cli.Transaction(
+            date="05.01.2024", name="REWE", descr="Markt", amount=Decimal("-49.99"), category="rewe", group="Grocery"
+        ),
+    ]
+
+
+def test_should_skip_ignored_terms() -> None:
+    transactions = cli.parse_bank_statement("Saldo -01,11 \n 05.01.2024 REWE Markt -49,99")
+
+    assert transactions == [
+        cli.Transaction(
+            date="05.01.2024", name="REWE", descr="Markt", amount=Decimal("-49.99"), category="rewe", group="Grocery"
+        ),
+    ]
+
+
 def test_writes_tsv_rows() -> None:
     output = StringIO()
 
