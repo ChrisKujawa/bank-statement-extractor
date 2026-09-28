@@ -172,7 +172,7 @@ def test_writes_tsv_rows() -> None:
     )
 
     assert output.getvalue() == (
-        "date\tname\tdescr\tamount\tcategory\tgroup\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\tGrocery\n"
+        "date\tname\tdescr\tamount\tcategory\tgroup\n05.01.2024\tREWE\tMarkt\t-49,99\trewe\tGrocery\n"
     )
 
 
@@ -186,7 +186,7 @@ def test_main_extracts_pdf_and_writes_rows(monkeypatch: pytest.MonkeyPatch, caps
     cli.main(["/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "date,name,descr,amount,category,group\n01.01.2024,Gehalt,Arbeitgeber,1500.00,gehalt,Income\n05.01.2024,REWE,Markt,-49.99,rewe,Grocery\n"
+        "date;name;descr;amount;category;group\n01.01.2024;Gehalt;Arbeitgeber;1500,00;gehalt;Income\n05.01.2024;REWE;Markt;-49,99;rewe;Grocery\n"
     )
 
 
@@ -196,7 +196,7 @@ def test_main_supports_tsv_output(monkeypatch: pytest.MonkeyPatch, capsys: pytes
     cli.main(["--format", "tsv", "/tmp/statement.pdf"])
 
     assert capsys.readouterr().out == (
-        "date\tname\tdescr\tamount\tcategory\tgroup\n05.01.2024\tREWE\tMarkt\t-49.99\trewe\tGrocery\n"
+        "date\tname\tdescr\tamount\tcategory\tgroup\n05.01.2024\tREWE\tMarkt\t-49,99\trewe\tGrocery\n"
     )
 
 

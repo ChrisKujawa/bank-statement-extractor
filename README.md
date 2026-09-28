@@ -30,9 +30,9 @@ bank-statement-extractor
 The default output writes one row per extracted transaction:
 
 ```csv
-date,name,descr,amount,category
-01.01.2024,Gehalt,Arbeitgeber,1500.00,
-05.01.2024,REWE,Markt,-49.99,rewe
+date;name;descr;amount;category
+01.01.2024;Gehalt;Arbeitgeber;1500,00;
+05.01.2024;REWE;Markt;-49,99;rewe
 ```
 
 To keep the old categorized totals, use the `sum` subcommand:
@@ -42,11 +42,13 @@ bank-statement-extractor sum /path/to/bank.pdf
 ```
 
 ```csv
-title,in,out,Grocery,Shopping,Fuel,Order,Insurance
-bank.pdf,1500.00,-62.48,-62.48,0.00,0.00,0.00,0.00
+title;in;out;Grocery;Shopping;Fuel;Order;Insurance
+bank.pdf;1500,00;-62,48;-62,48;0,00;0,00;0,00;0,00
 ```
 
-Both modes support CSV and TSV output:
+Both modes support CSV and TSV output. CSV uses `;` as the field separator, TSV uses tabs;
+both use `,` as the decimal separator (avoids Google Sheets misreading amounts like `1964.07`
+as dates on import):
 
 ```bash
 bank-statement-extractor --format tsv /path/to/bank.pdf

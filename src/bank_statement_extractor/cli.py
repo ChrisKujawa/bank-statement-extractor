@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> None:
         "--format",
         choices=("csv", "tsv"),
         default="csv",
-        help="Output format. Defaults to csv.",
+        help="Output format. csv uses ';' separators, tsv uses tabs; both use ',' decimals. Defaults to csv.",
     )
     parser.add_argument(
         "pdfs",
@@ -220,7 +220,7 @@ def _split_description(description: str) -> tuple[str, str]:
 def _delimiter(output_format: str) -> str:
     if output_format == "tsv":
         return "\t"
-    return ","
+    return ";"
 
 
 def _parse_german_decimal(value: str) -> Decimal:
@@ -228,4 +228,4 @@ def _parse_german_decimal(value: str) -> Decimal:
 
 
 def _format_decimal(value: Decimal) -> str:
-    return f"{value:.2f}"
+    return f"{value:.2f}".replace(".", ",")
