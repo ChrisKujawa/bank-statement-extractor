@@ -34,6 +34,7 @@ GROUPS = OrderedDict(
         ("Order", ("dauerauftrag", "sparen")),
         ("Insurance", ("versicherung",)),
         ("Income", ("gehalt", "lohn")),
+        ("Consumption", ("strom", "wasser", "gas")),
     )
 )
 
@@ -60,6 +61,9 @@ CATEGORY_PATTERNS = OrderedDict(
         ("lohn", compile_pattern(r"\blohn\b")),
         ("gehalt", compile_pattern(r"\bgehalt\b")),
         ("versicherung", compile_pattern(r"\b\w*(vers)(icherung)?\w*")),
+        ("strom", compile_pattern(r"\b\w*strom\w*")),
+        ("wasser", compile_pattern(r"\b\w*wasser\w*")),
+        ("gas", compile_pattern(r"\b\w*gas\w*")),
     )
 )
 

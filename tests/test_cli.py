@@ -125,7 +125,7 @@ def test_column_order_is_consistent_across_runs() -> None:
     keys2 = list(cli.GROUPS)
 
     assert keys1 == keys2
-    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order", "Insurance", "Income"]
+    assert keys1 == ["Grocery", "Shopping", "Fuel", "Order", "Insurance", "Income", "Consumption"]
 
 
 def test_all_group_categories_have_matchers() -> None:
